@@ -1,0 +1,240 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Support API",
+    "description": "API de suporte para gerenciamento de liberações de emergência e ações de suporte",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Equipe de Suporte",
+      "email": "suporte@exemplo.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333",
+      "description": "Servidor de desenvolvimento"
+    },
+    {
+      "url": "https://api3.whatsmenu.com.br",
+      "description": "Servidor de produção"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Support",
+      "description": "Endpoints relacionados a operações de suporte"
+    }
+  ],
+  "paths": {
+    "/support/emergencyLiberation": {
+      "post": {
+        "tags": ["Support"],
+        "summary": "Liberação de emergência",
+        "description": "Realiza a liberação de emergência de um cliente, permitindo acesso temporário ao sistema. Cada cliente tem direito a no máximo 2 liberações de emergência.",
+        "operationId": "emergencyLiberation",
+        "requestBody": {
+          "required": true,
+          "description": "Dados necessários para realizar a liberação de emergência",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmergencyLiberationRequest"
+              },
+              "examples": {
+                "byEmail": {
+                  "summary": "Liberação por email",
+                  "value": {
+                    "type": "email",
+                    "user": "usuario@exemplo.com"
+                  }
+                },
+                "byPhone": {
+                  "summary": "Liberação por telefone",
+                  "value": {
+                    "type": "phone",
+                    "user": "+5511999999999"
+                  }
+                },
+                "byId": {
+                  "summary": "Liberação por ID",
+                  "value": {
+                    "type": "id",
+                    "user": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Liberação realizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                },
+                "example": {
+                  "message": "Liberação de emergência realizada com sucesso"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida ou limite excedido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "userNotFound": {
+                    "summary": "Cliente não encontrado",
+                    "value": {
+                      "message": "Cliente não encontrado"
+                    }
+                  },
+                  "limitExceeded": {
+                    "summary": "Limite de liberações excedido",
+                    "value": {
+                      "message": "Cliente excedeu o limite de liberações de emergência"
+                    }
+                  },
+                  "validationError": {
+                    "summary": "Erro de validação",
+                    "value": {
+                      "message": "Dados inválidos",
+                      "errors": [
+                        {
+                          "field": "type",
+                          "message": "O campo type deve ser 'email', 'phone' ou 'id'"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno do servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/actions": {
+      "post": {
+        "tags": ["Support"],
+        "summary": "Executar ações de suporte",
+        "description": "Endpoint para executar diversas ações de suporte (a ser implementado)",
+        "operationId": "supportActions",
+        "responses": {
+          "200": {
+            "description": "Ação executada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Requisição inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EmergencyLiberationRequest": {
+        "type": "object",
+        "required": ["type", "user"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["email", "phone", "id"],
+            "description": "Tipo de identificador usado para localizar o usuário",
+            "example": "email"
+          },
+          "user": {
+            "type": "string",
+            "description": "Valor do identificador (email, telefone ou ID)",
+            "example": "usuario@exemplo.com"
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem de sucesso",
+            "example": "Operação realizada com sucesso"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem de erro",
+            "example": "Erro ao processar requisição"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Lista de erros de validação (opcional)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "description": "Campo que contém o erro"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Descrição do erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT para autenticação"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Chave de API para autenticação"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
